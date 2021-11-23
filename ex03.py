@@ -8,7 +8,7 @@ Created on Mon Nov  8 21:28:41 2021
 The 8 Queens Puzzle
 """
 
-bs = 8    # bs means board size. It can be modified to get solutions for any board sizes.
+bs = 4    # bs means board size. It can be modified to get solutions for any board sizes.
 
 board = []
 for i in range(0,bs) :
