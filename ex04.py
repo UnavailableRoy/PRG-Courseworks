@@ -215,6 +215,9 @@ class FileSystem:
             print (dic[i.class_name] + i.perm + "  " + i.owner + "  " + i.name)
             
 
+        
+            
+
 
                 
                 
