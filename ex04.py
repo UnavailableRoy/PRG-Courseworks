@@ -8,12 +8,17 @@ Created on Mon Nov 22 18:50:26 2021
 
 class File :
 
+    def __init__(self):
+        self.owner = "default"
+        self.perm = "rwxrwxrwx"
+        
     def chown(self,new_owner) :
         self.owner = new_owner
         return self.name + ".owner:" + self.owner
     
     def ls(self):
         return self.lsrec(0)
+    
         
 
 class PlainFile(File):
@@ -22,7 +27,8 @@ class PlainFile(File):
     
     def __init__(self,name) :
         self.name = name
-        self.owner = "default"
+        File.__init__(self)
+
     
     def __str__(self) :
         return  "{}({})"\
@@ -42,8 +48,7 @@ class Directory(File) :
     def __init__(self,name,filelist) :
         self.name = name
         self.filelist = filelist
-        self.owner = "default"
-    
+        File.__init__(self)
     
     def __str__(self) :
         try:
@@ -68,20 +73,30 @@ class FileSystem:
     
     helper = 0
     route = []
+    uhelper = 0
+    mhelper = 0
+    phelper = 0
 
     def __init__(self,direc) :
         self.wd = direc
+        self.root = direc
         
     def pwd(self) :
-         return self.wd.name
+        self.wd = self.root
+        print("/" + self.wd.name, end = "")
+        for i in self.route :
+            self.wd = self.wd.filelist[i]
+            print("/" + self.wd.name, end = "")
      
     def ls(self) :
          return self.wd.ls()
          
+     
+        
     def cd(self,filename) :
         if filename == ".." :
-            self.route = self.route[:-1]
-            self.wd = root
+            del self.route[-1]
+            self.wd = self.root
             for i in self.route :
                 self.wd = self.wd.filelist[i]
             return
@@ -99,6 +114,8 @@ class FileSystem:
             print ("The directory does not exist!")
             
     
+    
+    
     def create_file(self,new_file) :
         for i in self.wd.filelist :
             if new_file == i.name :
@@ -106,25 +123,106 @@ class FileSystem:
                 return
         self.wd.filelist += [PlainFile(new_file)]
             
-    def mkdir(self,new_file) :
+        
+        
+        
+    def mkdir(self,new_file,owner="default") :
         for i in self.wd.filelist :
             if new_file == i.name :
                 print("A file with the same name already exists!")
                 return
             
         self.wd.filelist += [Directory(new_file,[])]
+        self.wd.filelist[-1].owner = owner
+
         
-        while True :
-            self.helper = str(input("Do you want to indicate the owner now? (y/n) "))
-            if self.helper == "y" :
-                self.wd.filelist[-1].chown(input("Please indicate an owner: "))
-                break
-            elif self.helper == "n" :
-                break
-            else :
-                print("Please input 'y' or 'n'! ", end="")
-            
                 
+    def rm(self,name) :
+        for i in self.wd.filelist :
+            if name == i.name :
+                self.helper = self.wd.filelist.index(i)
+                if i.class_name == "Directory" :
+                    if i.filelist != [] :
+                        print("Sorry, the directory is not empty")
+                        return
+                del self.wd.filelist[self.helper]
+                return
+        print("The file does not exists.")
+        
+        
+
+
+    def find(self,name) :
+            
+        for i in self.wd.filelist :
+            if name == i.name :
+                self.pwd()
+                print("/" + name)
+                self.helper = 1
+                return
+    
+        for i in self.wd.filelist :
+            if i.class_name == "Directory" :
+                self.cd(i.name)
+                self.find(name)
+                self.cd("..")
+                if self.helper == 1:
+                    return
+        print("False")
+        
+        
+        
+    def chown_R(self,new_owner):
+        self.wd.chown(new_owner)
+        for i in self.wd.filelist :
+            i.chown(new_owner)
+            if i.class_name == "Directory" :
+                self.cd(i.name)
+                self.chown_R(new_owner)
+                self.cd("..")
+    
+    
+    
+    def chmod(self,command,filename) :
+        
+        dic = {"u":0,"g":1,"o":2,\
+                      "r":0,"w":1,"x":2}
+            
+        if len(command) != 3 :
+            print("Wrong command!")
+            return
+        
+        for i in self.wd.filelist:
+            if filename == i.name :
+                try:
+                    a = dic[command[0]]*3+dic[command[2]]
+                    if command[1] == "+" :
+                        i.perm = i.perm[:a] + command[2] + i.perm[a+1:]
+                    elif command [1] == "-" :
+                        i.perm = i.perm[:a] + "-" + i.perm[a+1:]
+                    else :
+                        print("Wrong command!")
+                        return
+                except KeyError:
+                    print("Wrong command!")
+                    return
+    
+    
+    
+    def ls_l(self) :
+        dic = {"PlainFile":"-","Directory":"d"}
+        for i in self.wd.filelist :
+            print (dic[i.class_name] + i.perm + "  " + i.owner + "  " + i.name)
+            
+
+
+                
+                
+                
+    
+    
+    
+
          
          
          
