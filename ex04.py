@@ -73,9 +73,7 @@ class FileSystem:
     
     helper = 0
     route = []
-    uhelper = 0
-    mhelper = 0
-    phelper = 0
+
 
     def __init__(self,direc) :
         self.wd = direc
@@ -111,7 +109,7 @@ class FileSystem:
                         self.wd = i
                     break
         if self.wd.name != filename :
-            print ("The directory does not exist!")
+            print ("The directory {} does not exist!".format(filename))
             
     
     
@@ -140,12 +138,11 @@ class FileSystem:
     def rm(self,name) :
         for i in self.wd.filelist :
             if name == i.name :
-                self.helper = self.wd.filelist.index(i)
                 if i.class_name == "Directory" :
                     if i.filelist != [] :
                         print("Sorry, the directory is not empty")
                         return
-                del self.wd.filelist[self.helper]
+                self.wd.filelist.remove(i)
                 return
         print("The file does not exists.")
         
@@ -215,8 +212,56 @@ class FileSystem:
             print (dic[i.class_name] + i.perm + "  " + i.owner + "  " + i.name)
             
 
+    def mv(self,filename,path) :
         
+        check = 0         # To mark that whether the file is found in current directory
+        pathlist = []     # To store every directory name in the path
+        slash_location = [i for i,x in enumerate(path) if x == "/"] # To store the location of "/"
+        
+        for i,x in enumerate(slash_location) :
+            try:
+                pathlist += [path[x+1:slash_location[i+1]]]
+            except IndexError :
+                pathlist += [path[x+1:]]
             
+        for i in self.wd.filelist :
+            if filename == i.name :
+                temp = i
+                check = 1
+                break
+                
+        if check == 0 :
+            print("The file does not exists.")
+            return
+        
+        if pathlist[0] != self.root.name :
+            print("Not a directory: {}".format(pathlist[0]))
+            return
+        
+        self.wd.filelist.remove(temp)
+
+        
+        origin_wd = self.wd
+        
+        if pathlist[0] != self.root.name :
+            print("Not a directory: {}".format(pathlist[0]))
+        
+        while self.wd.name != self.root.name :
+            self.cd("..")
+            
+        for i in pathlist[1:] :
+            helper = self.wd.name
+            self.cd(i)
+            if self.wd.name == helper :
+                self.wd = origin_wd
+                self.wd.filelist += [temp]
+                return
+            
+        self.wd.filelist += [temp]
+        
+        
+        
+                
 
 
                 
